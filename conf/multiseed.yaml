@@ -1,0 +1,19 @@
+defaults:
+  - override hydra/launcher: joblib
+  - override hydra/job_logging: colorlog
+  - override hydra/hydra_logging: colorlog
+
+hydra:
+  mode: MULTIRUN
+  launcher:
+    n_jobs: 18
+  sweeper:
+    params:
+      +population_size: 128
+      +size_pressure: 0.2
+      +kappa: 20
+      +epsilon: 0.001
+      +dataset: iris,wine,beer
+      +method: flare
+      +seed: range(1,20)
+      +bb: RF,NN,SVM
