@@ -30,6 +30,12 @@ DATASETS = {
     'beer': load_beer
 }
 
+BEER_FUZZY_POINTS = {
+    'color': [0,5.25,13.25,24,45],
+    'bitterness': [7,26.75,40,250,250.1],
+    'strength': [0.035, 0.06, 0.07875, 0.136,0.137]
+}
+
 def convert_ruleset(ruleset, discrete, X, dataset, class_name):
     new_ruleset = []
     for rule in ruleset:
@@ -183,7 +189,11 @@ def experiment(cfg : DictConfig) -> None:
     flocal_fidelity = accuracy_score(clf_results, flocal.predict(X_test))
 
     print('Mapping ruleset to global variables')
-    fuzzy_points = get_fuzzy_points('equal_width', continuous, X_num, sets=fuzzy_sets)
+    if db == 'beer':
+        fuzzy_points = BEER_FUZZY_POINTS
+    else:
+        fuzzy_points = get_fuzzy_points('equal_width', continuous, X_num, sets=fuzzy_sets)
+
     cate = [col for col in discrete if col != class_name]
     discrete_fuzzy_values = {col: X_dev[col].unique() for col in cate}
     fuzzy_variables_order = {col: i for i, col in enumerate(X_dev.columns)}
@@ -218,7 +228,7 @@ def experiment(cfg : DictConfig) -> None:
     print((best_flocal_size, best_flocal_score, best_flocal_rule_size, best_flocal_fidelity, flocal_score, flocal_size, flocal_rule_size, flocal_fidelity))
 
     file_name = f'seed_flocallore_{seed}_{db}_{method}_{population_size}_{size_pressure}_{kappa}_{epsilon}_{bb}.txt'
-    with open(f'./new_results/{file_name}', 'w+') as f:
+    with open(f'./results/{file_name}', 'w+') as f:
         f.write(str((best_flocal_size, best_flocal_score, best_flocal_rule_size, best_flocal_fidelity, flocal_score, flocal_size, flocal_rule_size, flocal_fidelity)))
 
 
