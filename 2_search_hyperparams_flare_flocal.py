@@ -7,7 +7,7 @@ import random
 from sklearn.model_selection import train_test_split
 from teacher.fuzzy import get_fuzzy_points
 from flocalx.rule import FLocalX
-from flocalx.genetic import GeneticAlgorithm
+from flocalx.genetic import GeneticAlgorithm, Chromosome
 from os import listdir
 from os.path import isfile, join
 
@@ -139,7 +139,7 @@ def experiment(cfg : DictConfig) -> None:
     var_metadata = get_variables_metadata(fuzzy_variables, discrete_fuzzy_values, fuzzy_variables_order)
     var_metadata['max_class'] = max(dataset['y'][y_dev.index])
     flocal.variable_mapping(fuzzy_variables)
-    initial_chromosome = flocal.chromosome(var_metadata)
+    initial_chromosome = Chromosome.from_ruleset(flocal, var_metadata)
 
     print('Fitting global rule system')
     gen = GeneticAlgorithm(var_metadata, 
@@ -156,7 +156,7 @@ def experiment(cfg : DictConfig) -> None:
 
     gen()
     best = max(gen.population)
-    best_flocal = best.to_rule_based_system(var_metadata)
+    best_flocal = FLocalX.from_chromosome(best, var_metadata)
     best_flocal_size = best_flocal.size()
     best_flocal_score = best_flocal.score(X_test, dataset['y'][y_test.index])
 

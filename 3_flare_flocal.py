@@ -8,7 +8,7 @@ from sklearn.model_selection import train_test_split
 from sklearn.metrics import accuracy_score
 from teacher.fuzzy import get_fuzzy_points
 from flocalx.rule import FLocalX
-from flocalx.genetic import GeneticAlgorithm
+from flocalx.genetic import GeneticAlgorithm, Chromosome
 from os import listdir
 from os.path import isfile, join
 from joblib import load
@@ -88,11 +88,12 @@ def load_ruleset_from_local_explanations(my_path, db, method, bb='', n_explanati
     return ruleset
 
 
-@hydra.main(version_base=None, config_path="conf", config_name="multiseed")
-def experiment(cfg : DictConfig) -> None:
-# def experiment():
-    # random.seed(seed)
-    # np.random.seed(seed)
+# @hydra.main(version_base=None, config_path="conf", config_name="multiseed")
+# def experiment(cfg : DictConfig) -> None:
+def experiment():
+    seed = 42
+    random.seed(seed)
+    np.random.seed(seed)
     
     # Fixed Hyperparameters
     fuzzy_sets = 5
@@ -100,23 +101,23 @@ def experiment(cfg : DictConfig) -> None:
     crossover_prob = 0.8
     
     # Moving Hyperparameters
-    db = cfg.dataset
-    method = cfg.method
-    population_size = cfg.population_size
-    size_pressure =  cfg.size_pressure
-    kappa = cfg.kappa
-    epsilon = cfg.epsilon
-    seed = cfg.seed
-    bb = cfg.bb
+    # db = cfg.dataset
+    # method = cfg.method
+    # population_size = cfg.population_size
+    # size_pressure =  cfg.size_pressure
+    # kappa = cfg.kappa
+    # epsilon = cfg.epsilon
+    # seed = cfg.seed
+    # bb = cfg.bb
 
-    # db = 'beer'
-    # method = 'flare'
-    # population_size = 128
-    # size_pressure =  0.2
-    # kappa = 20
-    # epsilon = 0.001
-    # seed = 5
-    # bb = 'NN'
+    db = 'iris'
+    method = 'flare'
+    population_size = 128
+    size_pressure =  0.2
+    kappa = 20
+    epsilon = 0.001
+    seed = 5
+    bb = 'NN'
 
     # Parameters
     random_state = np.random.default_rng(seed=seed)
@@ -171,7 +172,7 @@ def experiment(cfg : DictConfig) -> None:
     var_metadata = get_variables_metadata(fuzzy_variables, discrete_fuzzy_values, fuzzy_variables_order)
     var_metadata['max_class'] = max(dataset['y'][y_dev.index])
     flocal.variable_mapping(fuzzy_variables)
-    initial_chromosome = flocal.chromosome(var_metadata)
+    initial_chromosome = Chromosome.from_ruleset(flocal, var_metadata)
 
     print('Fitting global rule system')
     gen = GeneticAlgorithm(var_metadata, 
@@ -189,7 +190,7 @@ def experiment(cfg : DictConfig) -> None:
 
     gen()
     best = max(gen.population)
-    best_flocal = best.to_rule_based_system(var_metadata)
+    best_flocal = FLocalX.from_chromosome(best, var_metadata)
     best_flocal_size = best_flocal.size()
     best_flocal_score = best_flocal.score(X_test, dataset['y'][y_test.index])
     best_flocal_rule_size = best_flocal.rule_size()
